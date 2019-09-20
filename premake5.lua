@@ -25,15 +25,18 @@ project "VulkanTest"
 
 	includedirs {
 		"%{prj.name}/src/",
+		"C:/VulkanSDK/1.1.121.0/Include/",
 		"%{prj.name}/extlib/GLFW/include/",
 		"%{prj.name}/extlib/GLM/include/"
 	}
 
 	libdirs {
+		"C:/VulkanSDK/1.1.121.0/Lib/",
 		"%{prj.name}/extlib/GLFW/"
 	}
 
 	links {
+		"vulkan-1.lib",
 		"glfw3"
 	}
 
