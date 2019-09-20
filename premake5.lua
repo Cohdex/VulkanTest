@@ -25,26 +25,20 @@ project "VulkanTest"
 
 	includedirs {
 		"%{prj.name}/src/",
+		"%{prj.name}/extlib/GLFW/include/",
 		"%{prj.name}/extlib/GLM/include/"
 	}
 
+	libdirs {
+		"%{prj.name}/extlib/GLFW/"
+	}
+
 	links {
-		"glad",
-		"OpenGL32"
+		"glfw3"
 	}
 
 	filter "system:windows"
 		systemversion "latest"
-
-		includedirs {
-			"%{prj.name}/extlib/GLFW/include/"
-		}
-		libdirs {
-			"%{prj.name}/extlib/GLFW/"
-		}
-		links {
-			"glfw3"
-		}
 
 	filter "configurations:Debug"
 		defines "VKT_DEBUG"

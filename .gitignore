@@ -30,3 +30,12 @@
 *.exe
 *.out
 *.app
+
+# Output folders
+/bin-int
+
+# VS project files
+*.sln
+/.vs
+**.vcxproj
+**.vcxproj.user
