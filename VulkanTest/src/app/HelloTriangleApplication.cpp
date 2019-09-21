@@ -4,6 +4,11 @@
 
 namespace vkt
 {
+	HelloTriangleApplication::HelloTriangleApplication(int width, int height)
+		: VulkanApplication("Hello Triangle", width, height)
+	{
+	}
+
 	HelloTriangleApplication::~HelloTriangleApplication()
 	{
 
@@ -11,6 +16,6 @@ namespace vkt
 
 	void HelloTriangleApplication::initApp()
 	{
-
+		
 	}
 }

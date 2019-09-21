@@ -6,13 +6,13 @@ namespace vkt
 {
 	class HelloTriangleApplication : public VulkanApplication
 	{
-	private:
+	public:
+		HelloTriangleApplication(int width, int height);
+		virtual ~HelloTriangleApplication();
 
 	protected:
-		virtual void initApp();
+		virtual void initApp() override;
 
-	public:
-		HelloTriangleApplication() = default;
-		virtual ~HelloTriangleApplication();
+	private:
 	};
 }

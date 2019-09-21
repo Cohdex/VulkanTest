@@ -5,7 +5,7 @@
 int main() {
 	try
 	{
-		std::unique_ptr<vkt::VulkanApplication> app = std::make_unique<vkt::HelloTriangleApplication>();
+		std::unique_ptr<vkt::VulkanApplication> app = std::make_unique<vkt::HelloTriangleApplication>(1920, 1080);
 		app->run();
 	}
 	catch (const std::exception& e)
