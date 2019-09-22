@@ -28,11 +28,13 @@ namespace vkt
 		int m_height;
 		GLFWwindow* m_window = nullptr;
 		vk::Instance m_instance;
+		vk::PhysicalDevice m_physicalDevice;
 
 		void init();
 		void initWindow();
 		void initVulkan();
 		void createInstance();
+		void createPhysicalDevice();
 		void mainLoop();
 		void cleanup();
 	};

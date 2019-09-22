@@ -68,6 +68,7 @@ namespace vkt
 		for (unsigned i = 0; i < glfwExtensionCount; i++)
 			std::cout << "\t" << glfwExtensions[i] << std::endl;
 
+#ifdef VKT_DEBUG
 		auto validationLayers = vk::enumerateInstanceLayerProperties();
 		unsigned maxLayerNameLength = 0;
 		for (const auto& validationLayer : validationLayers)
@@ -80,16 +81,58 @@ namespace vkt
 		for (const auto& validationLayer : validationLayers)
 			std::cout << "\t" << std::left << std::setw(maxLayerNameLength) << validationLayer.layerName << " | " << validationLayer.description << " [" << validationLayer.implementationVersion << "]" << std::endl;
 
-#ifdef VKT_DEBUG
 		std::array<const char*, 1> enabledValidationLayers = {
 			"VK_LAYER_KHRONOS_validation"
 		};
+		std::cout << enabledValidationLayers.size() << " enabled validation layers:" << std::endl;
+		for (const auto& validationLayer : enabledValidationLayers)
+			std::cout << "\t" << validationLayer << std::endl;
 		createInfo.enabledLayerCount = static_cast<uint32_t>(enabledValidationLayers.size());
 		createInfo.ppEnabledLayerNames = enabledValidationLayers.data();
 #endif
 
 		if (vk::createInstance(&createInfo, nullptr, &m_instance) != vk::Result::eSuccess)
 			throw std::runtime_error("Failed to create instance");
+	}
+
+	static bool isPhysicalDeviceSuitable(const vk::PhysicalDevice& physicalDevice)
+	{
+		vk::PhysicalDeviceProperties deviceProperties = physicalDevice.getProperties();
+		//vk::PhysicalDeviceFeatures deviceFeatures = physicalDevice.getFeatures();
+
+		bool foundGraphicsQueue = false;
+		auto queueFamilies = physicalDevice.getQueueFamilyProperties();
+		for (const auto& queueFamily : queueFamilies)
+		{
+			if (queueFamily.queueCount > 0 && queueFamily.queueFlags & vk::QueueFlagBits::eGraphics)
+			{
+				foundGraphicsQueue = true;
+				break;
+			}
+		}
+
+		return foundGraphicsQueue && deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu;
+	}
+
+	void VulkanApplication::createPhysicalDevice()
+	{
+		auto physicalDevices = m_instance.enumeratePhysicalDevices();
+		if (physicalDevices.empty())
+			throw std::runtime_error("Failed to find a GPU with Vulkan support");
+
+		bool suitableDeviceFound = false;
+		for (const auto& physicalDevice : physicalDevices)
+		{
+			if (isPhysicalDeviceSuitable(physicalDevice))
+			{
+				m_physicalDevice = physicalDevice;
+				suitableDeviceFound = true;
+				break;
+			}
+		}
+
+		if (!suitableDeviceFound)
+			throw std::runtime_error("Failed to find a suitable Vulkan GPU");
 	}
 
 	void VulkanApplication::mainLoop()
