@@ -46,6 +46,8 @@ namespace vkt
 			throw std::runtime_error("Vulkan is not supported");
 
 		createInstance();
+		createPhysicalDevice();
+		createDevice();
 	}
 
 	void VulkanApplication::createInstance()
@@ -91,8 +93,33 @@ namespace vkt
 		createInfo.ppEnabledLayerNames = enabledValidationLayers.data();
 #endif
 
-		if (vk::createInstance(&createInfo, nullptr, &m_instance) != vk::Result::eSuccess)
-			throw std::runtime_error("Failed to create instance");
+		m_instance = vk::createInstance(createInfo);
+	}
+
+	struct QueueFamilyIndices
+	{
+		std::optional<uint32_t> graphicsIndex;
+
+		bool hasAllIndices()
+		{
+			return graphicsIndex.has_value();
+		}
+	};
+
+	QueueFamilyIndices findQueueFamilies(const vk::PhysicalDevice& physicalDevice)
+	{
+		auto queueFamilies = physicalDevice.getQueueFamilyProperties();
+		QueueFamilyIndices queueIndices;
+		int index = 0;
+		for (const auto& queueFamily : queueFamilies)
+		{
+			if (queueFamily.queueCount > 0 && (queueFamily.queueFlags & vk::QueueFlagBits::eGraphics))
+				queueIndices.graphicsIndex = index;
+			index++;
+			if (queueIndices.hasAllIndices())
+				break;
+		}
+		return queueIndices;
 	}
 
 	static bool isPhysicalDeviceSuitable(const vk::PhysicalDevice& physicalDevice)
@@ -100,18 +127,10 @@ namespace vkt
 		vk::PhysicalDeviceProperties deviceProperties = physicalDevice.getProperties();
 		//vk::PhysicalDeviceFeatures deviceFeatures = physicalDevice.getFeatures();
 
-		bool foundGraphicsQueue = false;
-		auto queueFamilies = physicalDevice.getQueueFamilyProperties();
-		for (const auto& queueFamily : queueFamilies)
-		{
-			if (queueFamily.queueCount > 0 && queueFamily.queueFlags & vk::QueueFlagBits::eGraphics)
-			{
-				foundGraphicsQueue = true;
-				break;
-			}
-		}
+		auto queueFamilies = findQueueFamilies(physicalDevice);
 
-		return foundGraphicsQueue && deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu;
+		return deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu
+			&& queueFamilies.hasAllIndices();
 	}
 
 	void VulkanApplication::createPhysicalDevice()
@@ -135,6 +154,27 @@ namespace vkt
 			throw std::runtime_error("Failed to find a suitable Vulkan GPU");
 	}
 
+	void VulkanApplication::createDevice()
+	{
+		vk::DeviceQueueCreateInfo queueCreateInfo;
+		QueueFamilyIndices queueIndices = findQueueFamilies(m_physicalDevice);
+		queueCreateInfo.queueFamilyIndex = queueIndices.graphicsIndex.value();
+		queueCreateInfo.queueCount = 1;
+
+		float queuePriority = 1.0f;
+		queueCreateInfo.pQueuePriorities = &queuePriority;
+
+		vk::DeviceCreateInfo deviceCreateInfo;
+		deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
+		deviceCreateInfo.queueCreateInfoCount = 1;
+
+		vk::PhysicalDeviceFeatures deviceFeatures;
+		deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
+
+		m_device = m_physicalDevice.createDevice(deviceCreateInfo);
+		m_graphicsQueue = m_device.getQueue(queueIndices.graphicsIndex.value(), 0);
+	}
+
 	void VulkanApplication::mainLoop()
 	{
 		while (!glfwWindowShouldClose(m_window))
@@ -145,6 +185,7 @@ namespace vkt
 
 	void VulkanApplication::cleanup()
 	{
+		m_device.destroy();
 		m_instance.destroy();
 
 		glfwDestroyWindow(m_window);
