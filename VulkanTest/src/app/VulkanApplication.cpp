@@ -25,7 +25,8 @@ namespace vkt
 	{
 		initWindow();
 		initVulkan();
-		initApp();
+
+		onInit();
 	}
 
 	void VulkanApplication::initWindow()
@@ -175,20 +176,23 @@ namespace vkt
 		m_graphicsQueue = m_device.getQueue(queueIndices.graphicsIndex.value(), 0);
 	}
 
-	void VulkanApplication::mainLoop()
-	{
-		while (!glfwWindowShouldClose(m_window))
-		{
-			glfwPollEvents();
-		}
-	}
-
 	void VulkanApplication::cleanup()
 	{
+		onCleanup();
+
 		m_device.destroy();
 		m_instance.destroy();
 
 		glfwDestroyWindow(m_window);
 		glfwTerminate();
+	}
+
+	void VulkanApplication::mainLoop()
+	{
+		while (!glfwWindowShouldClose(m_window))
+		{
+			glfwPollEvents();
+			onFrame();
+		}
 	}
 }

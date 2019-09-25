@@ -11,7 +11,9 @@ namespace vkt
 		virtual ~HelloTriangleApplication();
 
 	protected:
-		virtual void initApp() override;
+		virtual void onInit() override;
+		virtual void onCleanup() override;
+		virtual void onFrame() override;
 
 	private:
 	};

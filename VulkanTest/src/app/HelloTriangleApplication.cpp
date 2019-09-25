@@ -14,8 +14,18 @@ namespace vkt
 
 	}
 
-	void HelloTriangleApplication::initApp()
+	void HelloTriangleApplication::onInit()
 	{
 		
+	}
+
+	void HelloTriangleApplication::onCleanup()
+	{
+
+	}
+
+	void HelloTriangleApplication::onFrame()
+	{
+
 	}
 }

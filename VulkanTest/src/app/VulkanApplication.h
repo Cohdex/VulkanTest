@@ -20,13 +20,17 @@ namespace vkt
 		void run();
 
 	protected:
-		virtual void initApp() { }
+		virtual void onInit() { }
+		virtual void onCleanup() { }
+		virtual void onFrame() = 0;
 
 	private:
 		std::string m_appName;
 		int m_width;
 		int m_height;
+
 		GLFWwindow* m_window = nullptr;
+
 		vk::Instance m_instance;
 		vk::PhysicalDevice m_physicalDevice;
 		vk::Device m_device;
@@ -38,7 +42,9 @@ namespace vkt
 		void createInstance();
 		void createPhysicalDevice();
 		void createDevice();
-		void mainLoop();
+
 		void cleanup();
+
+		void mainLoop();
 	};
 }
