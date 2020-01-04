@@ -47,6 +47,7 @@ namespace vkt
 			throw std::runtime_error("Vulkan is not supported");
 
 		createInstance();
+		createSurface();
 		createPhysicalDevice();
 		createDevice();
 	}
@@ -97,17 +98,26 @@ namespace vkt
 		m_instance = vk::createInstance(createInfo);
 	}
 
+	void VulkanApplication::createSurface()
+	{
+		VkSurfaceKHR surface;
+		if (glfwCreateWindowSurface(m_instance, m_window, nullptr, &surface) != VK_SUCCESS)
+			throw std::runtime_error("Failed to create surface");
+		m_surface = surface;
+	}
+
 	struct QueueFamilyIndices
 	{
 		std::optional<uint32_t> graphicsIndex;
+		std::optional<uint32_t> presentFamily;
 
 		bool hasAllIndices()
 		{
-			return graphicsIndex.has_value();
+			return graphicsIndex.has_value() && presentFamily.has_value();
 		}
 	};
 
-	QueueFamilyIndices findQueueFamilies(const vk::PhysicalDevice& physicalDevice)
+	QueueFamilyIndices findQueueFamilies(const vk::PhysicalDevice& physicalDevice, const vk::SurfaceKHR& surface)
 	{
 		auto queueFamilies = physicalDevice.getQueueFamilyProperties();
 		QueueFamilyIndices queueIndices;
@@ -116,6 +126,11 @@ namespace vkt
 		{
 			if (queueFamily.queueCount > 0 && (queueFamily.queueFlags & vk::QueueFlagBits::eGraphics))
 				queueIndices.graphicsIndex = index;
+
+			vk::Bool32 presentSupport = physicalDevice.getSurfaceSupportKHR(index, surface);
+			if (queueFamily.queueCount > 0 && presentSupport)
+				queueIndices.presentFamily = index;
+
 			index++;
 			if (queueIndices.hasAllIndices())
 				break;
@@ -123,12 +138,12 @@ namespace vkt
 		return queueIndices;
 	}
 
-	static bool isPhysicalDeviceSuitable(const vk::PhysicalDevice& physicalDevice)
+	static bool isPhysicalDeviceSuitable(const vk::PhysicalDevice& physicalDevice, const vk::SurfaceKHR& surface)
 	{
 		vk::PhysicalDeviceProperties deviceProperties = physicalDevice.getProperties();
 		//vk::PhysicalDeviceFeatures deviceFeatures = physicalDevice.getFeatures();
 
-		auto queueFamilies = findQueueFamilies(physicalDevice);
+		auto queueFamilies = findQueueFamilies(physicalDevice, surface);
 
 		return deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu
 			&& queueFamilies.hasAllIndices();
@@ -143,7 +158,7 @@ namespace vkt
 		bool suitableDeviceFound = false;
 		for (const auto& physicalDevice : physicalDevices)
 		{
-			if (isPhysicalDeviceSuitable(physicalDevice))
+			if (isPhysicalDeviceSuitable(physicalDevice, m_surface))
 			{
 				m_physicalDevice = physicalDevice;
 				suitableDeviceFound = true;
@@ -158,7 +173,7 @@ namespace vkt
 	void VulkanApplication::createDevice()
 	{
 		vk::DeviceQueueCreateInfo queueCreateInfo;
-		QueueFamilyIndices queueIndices = findQueueFamilies(m_physicalDevice);
+		QueueFamilyIndices queueIndices = findQueueFamilies(m_physicalDevice, m_surface);
 		queueCreateInfo.queueFamilyIndex = queueIndices.graphicsIndex.value();
 		queueCreateInfo.queueCount = 1;
 
@@ -181,6 +196,7 @@ namespace vkt
 		onCleanup();
 
 		m_device.destroy();
+		m_instance.destroySurfaceKHR(m_surface);
 		m_instance.destroy();
 
 		glfwDestroyWindow(m_window);

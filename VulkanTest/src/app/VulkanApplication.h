@@ -32,14 +32,17 @@ namespace vkt
 		GLFWwindow* m_window = nullptr;
 
 		vk::Instance m_instance;
+		vk::SurfaceKHR m_surface;
 		vk::PhysicalDevice m_physicalDevice;
 		vk::Device m_device;
 		vk::Queue m_graphicsQueue;
+		vk::Queue m_presentQueue;
 
 		void init();
 		void initWindow();
 		void initVulkan();
 		void createInstance();
+		void createSurface();
 		void createPhysicalDevice();
 		void createDevice();
 
